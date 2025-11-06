@@ -43,9 +43,8 @@ export default {
           danger: '#ef4444',
           info: '#06b6d4'
         },
-        },
       },
     },
   },
-  plugins: []
-}
+  plugins: [],
+};
