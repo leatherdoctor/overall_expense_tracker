@@ -1,94 +1,89 @@
-import mysql from 'mysql2/promise';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'root',
-  database: process.env.DB_NAME || 'expense_tracker',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-};
+// Initialize PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/expense_tracker',
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
-// Create connection pool
-const pool = mysql.createPool(dbConfig);
+// Test the connection
+pool.on('connect', () => {
+  console.log('✅ Connected to PostgreSQL database');
+});
 
-// Test connection and create database if it doesn't exist
+pool.on('error', (err) => {
+  console.error('❌ Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+// Initialize database tables
 async function initializeDatabase() {
+  const client = await pool.connect();
+  
   try {
-    // First connect without database to create it if needed
-    const tempConnection = await mysql.createConnection({
-      host: dbConfig.host,
-      port: dbConfig.port,
-      user: dbConfig.user,
-      password: dbConfig.password
-    });
-
-    // Create database if it doesn't exist
-    await tempConnection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
-    console.log(`✅ Database '${dbConfig.database}' ready`);
-    await tempConnection.end();
-
-    // Now connect to the database and create tables
-    const connection = await pool.getConnection();
-
+    await client.query('BEGIN');
+    
     // Create users table
-    await connection.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         full_name VARCHAR(100),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Create expenses table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS expenses (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         category VARCHAR(100) NOT NULL,
         amount DECIMAL(10, 2) NOT NULL,
         note TEXT,
         date DATE NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        INDEX idx_user_date (user_id, date),
-        INDEX idx_user_category (user_id, category)
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Create income table (for salary and other income)
-    await connection.query(`
+    await client.query(`
+      CREATE TYPE income_type AS ENUM ('salary', 'bonus', 'investment', 'other');
+      
       CREATE TABLE IF NOT EXISTS income (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         source VARCHAR(100) NOT NULL,
         amount DECIMAL(10, 2) NOT NULL,
         note TEXT,
         date DATE NOT NULL,
-        type ENUM('salary', 'bonus', 'investment', 'other') DEFAULT 'salary',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        INDEX idx_user_date (user_id, date),
-        INDEX idx_user_type (user_id, type)
+        type income_type DEFAULT 'salary',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    
+    // Create indexes
+    await client.query('CREATE INDEX IF NOT EXISTS idx_income_user_date ON income(user_id, date)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_income_user_type ON income(user_id, type)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_expenses_user_date ON expenses(user_id, date)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_expenses_user_category ON expenses(user_id, category)');
 
-    connection.release();
+    await client.query('COMMIT');
     console.log('✅ Database tables created successfully');
 
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('❌ Database initialization error:', error.message);
     throw error;
+  } finally {
+    client.release();
   }
 }
 
