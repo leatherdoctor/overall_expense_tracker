@@ -39,7 +39,7 @@ async function initializeDatabase() {
     `);
 
     // Create expenses table
-    await connection.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS expenses (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -54,7 +54,12 @@ async function initializeDatabase() {
 
     // Create income table (for salary and other income)
     await client.query(`
-      CREATE TYPE income_type AS ENUM ('salary', 'bonus', 'investment', 'other');
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'income_type') THEN
+          CREATE TYPE income_type AS ENUM ('salary', 'bonus', 'investment', 'other');
+        END IF;
+      END $$;
       
       CREATE TABLE IF NOT EXISTS income (
         id SERIAL PRIMARY KEY,
