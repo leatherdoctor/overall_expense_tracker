@@ -1,0 +1,134 @@
+╔══════════════════════════════════════════════════════════════╗
+║          💰 EXPENSE TRACKER - QUICK START GUIDE              ║
+╚══════════════════════════════════════════════════════════════╝
+
+📦 STEP 1: Install Backend Dependencies
+   ┌────────────────────────────────────────┐
+   │ cd server                              │
+   │ npm install                            │
+   └────────────────────────────────────────┘
+
+🚀 STEP 2: Start Backend Server
+   ┌────────────────────────────────────────┐
+   │ cd server                              │
+   │ npm start                              │
+   └────────────────────────────────────────┘
+   
+   ✅ Backend running at: http://localhost:5000
+
+🎨 STEP 3: Start Frontend (New Terminal)
+   ┌────────────────────────────────────────┐
+   │ npm run dev                            │
+   └────────────────────────────────────────┘
+   
+   ✅ Frontend running at: http://localhost:5173
+
+🌐 STEP 4: Open Browser
+   ┌────────────────────────────────────────┐
+   │ http://localhost:5173                  │
+   └────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+⚡ QUICK START (PowerShell)
+   ┌────────────────────────────────────────┐
+   │ .\start-app.ps1                        │
+   └────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+📁 IMPORTANT FILES
+
+✅ Created for you:
+   • .env (frontend config)
+   • server/.env (backend config)
+   • .env.example (frontend template)
+   • server/.env.example (backend template)
+
+📝 Documentation:
+   • README.md - Full documentation
+   • SETUP.md - Detailed setup guide
+   • PROJECT_SUMMARY.md - Complete overview
+   • QUICK_START.txt - This file
+
+═══════════════════════════════════════════════════════════════
+
+🎯 FEATURES
+
+✅ Add Expenses (category, amount, note, date)
+✅ View & Edit Expenses (table with pagination)
+✅ Delete Expenses (with confirmation)
+✅ Filter & Sort (by category, date, amount)
+✅ Analytics Dashboard (charts & statistics)
+✅ Category Breakdown (pie & bar charts)
+✅ Daily Trends (line chart)
+✅ Local Storage (SQLite database)
+
+═══════════════════════════════════════════════════════════════
+
+🛠️ TECH STACK
+
+Frontend:
+   • React 19 + Vite
+   • TailwindCSS
+   • Recharts (charts)
+   • Lucide (icons)
+   • Axios (API calls)
+
+Backend:
+   • Node.js + Express
+   • SQLite (better-sqlite3)
+   • CORS + dotenv
+
+═══════════════════════════════════════════════════════════════
+
+🔧 TROUBLESHOOTING
+
+❌ Port already in use?
+   → Change PORT in server/.env
+
+❌ Database error?
+   → Delete server/database/expenses.db
+   → Restart backend (auto-recreates)
+
+❌ Module not found?
+   → Run: npm install (in root)
+   → Run: npm install (in server/)
+
+❌ CSS warnings?
+   → Ignore - TailwindCSS warnings are expected
+
+═══════════════════════════════════════════════════════════════
+
+📊 DATABASE
+
+Location: server/database/expenses.db
+Auto-created on first backend start
+All data stored locally
+
+═══════════════════════════════════════════════════════════════
+
+🎨 CUSTOMIZATION
+
+Categories: src/components/AddExpense.jsx
+Colors: tailwind.config.js
+API URL: .env (VITE_API_URL)
+Port: server/.env (PORT)
+
+═══════════════════════════════════════════════════════════════
+
+💡 TIPS
+
+1. Keep both terminals open while using the app
+2. Backend must start before frontend
+3. All data is local - no cloud sync
+4. Check browser console for errors
+5. Check terminal for API logs
+
+═══════════════════════════════════════════════════════════════
+
+🎉 ENJOY YOUR EXPENSE TRACKER!
+
+Need help? Check README.md for detailed documentation.
+
+═══════════════════════════════════════════════════════════════
